@@ -53,6 +53,10 @@ def book(competition,club):
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
+    # Chargement des données
+    competitions = loadCompetitions()
+    clubs = loadClubs()
+
     competition = [c for c in competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     placesRequired = int(request.form['places'])
@@ -64,6 +68,11 @@ def purchasePlaces():
         flash("Cannot book places for past competitions")
         return render_template('welcome.html', club=club, competitions=competitions)
     
+    # Vérifier la limite de 12 places max
+    if placesRequired > 12:
+        flash("Cannot book more than 12 places per competition per club")
+        return render_template('welcome.html', club=club, competitions=competitions)
+    
     # Vérification du nombre de points restants avant réservation
     if placesRequired > int(club['points']):
         flash("Not enough points")
@@ -72,11 +81,6 @@ def purchasePlaces():
     # Vérifier que la compétition a assez de places disponibles
     if placesRequired > int(competition['numberOfPlaces']):
         flash("Not enough places available in this competition")
-        return render_template('welcome.html', club=club, competitions=competitions)
-    
-    # Vérifier la limite de 12 places max
-    if placesRequired > 12:
-        flash("Cannot book more than 12 places per competition per club")
         return render_template('welcome.html', club=club, competitions=competitions)
     
     # Déduire les places disponibles

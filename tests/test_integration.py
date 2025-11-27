@@ -11,7 +11,6 @@ def client():
     with app.test_client() as client:
         yield client
 
-
 def test_index(client):
     # Test basique pour vérifier que la page d'accueil répond bien
     response = client.get('/')
@@ -74,7 +73,7 @@ def test_cannot_book_more_than_12_places(client):
     }
     response_excess = client.post('/purchasePlaces', data=data_excess, follow_redirects=True)
     assert response_excess.status_code == 200
-    assert b"Cannot book more than 12 places per competition per club" in response_excess.data  # ← ÉCHEC
+    assert b"Cannot book more than 12 places per competition per club" in response_excess.data
     assert b'Great-booking complete!' not in response_excess.data
     
     # Vérifier que les points n'ont PAS été déduits (toujours 13)
@@ -87,11 +86,11 @@ def test_cannot_spend_more_points_than_available(client):
     summary_response = client.post('/showSummary', data={'email': 'john@simplylift.co'})
     assert summary_response.status_code == 200
     
-    # Tentative de réservation de 20 places (plus que 13 points)
+    # Tentative de réservation de 12 places (12 <= 12 max, MAIS 12 > 11 points)
     data_too_many = {
-        'competition': 'Winter Gala',  # compétition future
-        'club': 'Simply Lift',
-        'places': '20'
+        'competition': 'Winter Gala',  # compétition future (30+ places)
+        'club': 'Iron Temple',
+        'places': '12'  # 12 <= 12 max → passe → 12 > 11 points → "Not enough points"
     }
     
     response_too_many = client.post('/purchasePlaces', data=data_too_many, follow_redirects=True)
@@ -99,8 +98,8 @@ def test_cannot_spend_more_points_than_available(client):
     assert b"Not enough points" in response_too_many.data 
     assert b'Great-booking complete!' not in response_too_many.data
     
-    # Vérifier que les points restent inchangés (13)
-    assert b'Points available: 13' in response_too_many.data
+    # Vérifier que les points restent inchangés
+    assert b'Points available: 11' in response_too_many.data
 
 def test_cannot_book_more_places_than_available(client):
     """Teste qu'on ne peut pas réserver plus de places que disponibles dans la compétition"""
@@ -109,12 +108,12 @@ def test_cannot_book_more_places_than_available(client):
     summary_response = client.post('/showSummary', data={'email': 'kate@shelifts.co.uk'})
     assert summary_response.status_code == 200
     
-    # Tentative réservation 21 places sur New Year's Championship (20 places dispo)
+    # Test de depassement
     data_excess = {
-        'competition': "New Year's Championship",  #  20 places disponibles
-        'club': 'She Lifts',                      #  22 points disponibles  
-        'places': '21'                            #  21 > 20 → doit échouer
-    }
+    'competition': "New Year's Championship",  # 10 places
+    'club': 'She Lifts',
+    'places': '11' 
+}
     
     response_excess = client.post('/purchasePlaces', data=data_excess, follow_redirects=True)
     assert response_excess.status_code == 200
@@ -125,8 +124,6 @@ def test_cannot_book_more_places_than_available(client):
     
     # Points n'ont pas été déduits
     assert b'Points available: 22' in response_excess.data
-
-
 
 def test_points_page_displays_all_clubs(client):
     """Teste que la page points affiche tous les clubs et leurs points"""
