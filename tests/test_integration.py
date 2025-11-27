@@ -79,3 +79,25 @@ def test_cannot_book_more_than_12_places(client):
     
     # Vérifier que les points n'ont PAS été déduits (toujours 13)
     assert b'Points available: 13' in response_excess.data
+
+def test_cannot_spend_more_points_than_available(client):
+    """Teste qu'un club ne peut pas réserver plus de places que ses points disponibles"""
+    
+    # Connexion club Simply Lift (13 points)
+    summary_response = client.post('/showSummary', data={'email': 'john@simplylift.co'})
+    assert summary_response.status_code == 200
+    
+    # Tentative de réservation de 20 places (plus que 13 points)
+    data_too_many = {
+        'competition': 'Winter Gala',  # compétition future
+        'club': 'Simply Lift',
+        'places': '20'
+    }
+    
+    response_too_many = client.post('/purchasePlaces', data=data_too_many, follow_redirects=True)
+    assert response_too_many.status_code == 200
+    assert b"Not enough points" in response_too_many.data  # ← Message attendu d'erreur
+    assert b'Great-booking complete!' not in response_too_many.data
+    
+    # Vérifier que les points restent inchangés (13)
+    assert b'Points available: 13' in response_too_many.data
