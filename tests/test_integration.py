@@ -27,7 +27,7 @@ def test_purchase_places_deducts_club_points(client):
     
     # Étape 2: Réservation de 2 places pour Spring Festival
     data = {
-        'competition': 'Spring Festival',
+        'competition': 'Winter Gala',
         'club': 'Simply Lift',
         'places': '2'
     }
@@ -96,8 +96,43 @@ def test_cannot_spend_more_points_than_available(client):
     
     response_too_many = client.post('/purchasePlaces', data=data_too_many, follow_redirects=True)
     assert response_too_many.status_code == 200
-    assert b"Not enough points" in response_too_many.data  # ← Message attendu d'erreur
+    assert b"Not enough points" in response_too_many.data 
     assert b'Great-booking complete!' not in response_too_many.data
     
     # Vérifier que les points restent inchangés (13)
     assert b'Points available: 13' in response_too_many.data
+
+def test_cannot_book_more_places_than_available(client):
+    """Teste qu'on ne peut pas réserver plus de places que disponibles dans la compétition"""
+    
+    # Connexion She Lifts (22 points)
+    summary_response = client.post('/showSummary', data={'email': 'kate@shelifts.co.uk'})
+    assert summary_response.status_code == 200
+    
+    # Tentative réservation 21 places sur New Year's Championship (20 places dispo)
+    data_excess = {
+        'competition': "New Year's Championship",  #  20 places disponibles
+        'club': 'She Lifts',                      #  22 points disponibles  
+        'places': '21'                            #  21 > 20 → doit échouer
+    }
+    
+    response_excess = client.post('/purchasePlaces', data=data_excess, follow_redirects=True)
+    assert response_excess.status_code == 200
+    
+    # Doit afficher une erreur places insuffisantes
+    assert b"Not enough places available in this competition" in response_excess.data
+    assert b'Great-booking complete!' not in response_excess.data
+    
+    # Points n'ont pas été déduits
+    assert b'Points available: 22' in response_excess.data
+
+
+
+def test_points_page_displays_all_clubs(client):
+    """Teste que la page points affiche tous les clubs et leurs points"""
+    response = client.get('/points')
+    assert response.status_code == 200
+    assert b'Simply Lift' in response.data
+    assert b'Iron Temple' in response.data
+    assert b'She Lifts' in response.data
+    assert b'13' in response.data  # Simply Lift points
