@@ -58,3 +58,24 @@ def test_cannot_book_past_competitions(client):
     
     # Vérifier que les points n'ont PAS été déduits (toujours 13)
     assert b'Points available: 13' in response_past.data
+
+def test_cannot_book_more_than_12_places(client):
+    """Teste qu'on ne peut pas réserver plus de 12 places par réservation"""
+    
+    # Connexion Simply Lift (13 points)
+    summary_response = client.post('/showSummary', data={'email': 'john@simplylift.co'})
+    assert summary_response.status_code == 200
+    
+    # Tentative de réservation de 13 places (AU-DESSUS DE 12)
+    data_excess = {
+        'competition': 'Winter Gala',  # Compétition future
+        'club': 'Simply Lift', 
+        'places': '13'
+    }
+    response_excess = client.post('/purchasePlaces', data=data_excess, follow_redirects=True)
+    assert response_excess.status_code == 200
+    assert b"Cannot book more than 12 places per competition per club" in response_excess.data  # ← ÉCHEC
+    assert b'Great-booking complete!' not in response_excess.data
+    
+    # Vérifier que les points n'ont PAS été déduits (toujours 13)
+    assert b'Points available: 13' in response_excess.data
