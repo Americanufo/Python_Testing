@@ -53,22 +53,23 @@ def showSummary():
     return render_template('welcome.html',club=club,competitions=competitions)
 
 
-
-
 @app.route('/book/<competition>/<club>')
 def book(competition,club):
+    """ Route pour afficher le formulaire de réservation d'une compétition pour un club spécifique."""
+
     clubs = loadClubs()  # Recharge pour état actuel
     competitions = loadCompetitions()  # Recharge pour état actuel
-    foundClub = [c for c in clubs if c['name'] == club][0]
-    foundCompetition = [c for c in competitions if c['name'] == competition][0]
+    
+    foundClub = next((c for c in clubs if c['name'] == club), None)
+    foundCompetition = next((c for c in competitions if c['name'] == competition), None)
+    
     if foundClub and foundCompetition:
         return render_template('booking.html',club=foundClub,competition=foundCompetition)
     else:
         flash("Something went wrong-please try again")
-        return render_template('welcome.html', club=foundClub, competitions=competitions)
+        return render_template('welcome.html', club=None, competitions=competitions)
 
-
-
+    
 
 @app.route('/purchasePlaces',methods=['POST'])
 def purchasePlaces():
@@ -126,15 +127,11 @@ def purchasePlaces():
                           competitions=loadCompetitions())
 
 
-
-
 @app.route('/points')
 def show_points():
     """Affiche le tableau des points de tous les clubs (lecture seule)"""
     clubs = loadClubs()  # Recharge pour état actuel
     return render_template('points.html', clubs=clubs)
-
-
 
 @app.route('/logout')
 def logout():

@@ -133,3 +133,25 @@ def test_points_page_displays_all_clubs(client):
     assert b'Iron Temple' in response.data
     assert b'She Lifts' in response.data
     assert b'13' in response.data  # Simply Lift points
+
+def test_book_route_success():
+    """Test route /book/ valide → booking.html"""
+    client = app.test_client()
+    response = client.get('/book/Winter Gala/Simply Lift')
+    assert response.status_code == 200
+    assert b"Winter Gala" in response.data          
+    assert b"Places available" in response.data     
+
+def test_book_route_not_found():
+    """Test route /book/ invalide → welcome.html """
+    client = app.test_client()
+    response = client.get('/book/Winter Gala/ClubInexistant')
+    assert response.status_code == 200              
+    assert b"Something went wrong" in response.data
+
+def test_logout_redirect():
+    """Test que la route logout redirige vers l'index"""
+    client = app.test_client()
+    response = client.get('/logout', follow_redirects=False)
+    assert response.status_code == 302  # redirection
+    assert response.headers['Location'] == '/'  # Redirige vers index
