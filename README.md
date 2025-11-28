@@ -1,51 +1,120 @@
-# gudlift-registration
+# GUDLFT - Réservation de Compétitions
 
-1. Why
+## 📖 Description
+
+Application Flask pour les secrétaires de clubs permettant de réserver des places de compétitions en utilisant des points. 
+
+**Fonctionnalités principales :**
+- Connexion sécurisée par email
+- Réservation de places (max 12 par club)
+- Déduction automatique des points
+- Tableau public des points clubs
+
+## Fonctionnalités Implémentées
+
+###  Phase 1 - Authentification & Réservations
+- [x] Connexion secrétaires via email/mot de passe
+- [x] Liste compétitions à venir
+- [x] Formulaire réservation `/book/mpétition>/<club>`
+- [x] Achat places `/purchasePlaces`
+- [x] Déconnexion `/logout`
+
+###  Phase 2 - Transparence & Performance
+- [x] Tableau points public `/points` (lecture seule)
+- [x] Tests Locust : 6 utilisateurs simultanés
+  - GET pages : 5-6ms (< 5s ✅)
+  - POST achat : 14ms (< 2s ✅)
+- [x] 100% Couverture pour le code server.py
+
+###  Contraintes Métier
+- [x] Max 12 places par club/compétition
+- [x] Nombre de points requis pour la réservation
+- [x] Pas de réservation pour les compétitions passées
+
+## 🛠️ Installation et démarrage
+
+### Prérequis
+- Python 3.8 ou plus récent
+- `pip` installé
+
+### Installation des dépendances
+
+Dans votre terminal, positionnez-vous dans le dossier du projet puis exécutez :
+
+pip install -r requirements.txt
+
+Cette commande installe les bibliothèques nécessaires.
+
+### Lancement de l’application
+
+Pour démarrer l’application Flask localement, tapez :
+
+flask --app server.py run -p 5000
 
 
-    This is a proof of concept (POC) project to show a light-weight version of our competition booking platform. The aim is the keep things as light as possible, and use feedback from the users to iterate.
+L’application sera accessible ensuite à l’adresse :  
+`http://127.0.0.1:5000`
 
-2. Getting Started
+---
 
-    This project uses the following technologies:
+## 🧪 Tests automatisés
 
-    * Python v3.x+
+### Lancement des tests unitaires et d’intégration
 
-    * [Flask](https://flask.palletsprojects.com/en/1.1.x/)
+Les tests sont organisés dans le dossier `tests/`. Pour exécuter tous les tests, utilisez :
 
-        Whereas Django does a lot of things for us out of the box, Flask allows us to add only what we need. 
-     
-
-    * [Virtual environment](https://virtualenv.pypa.io/en/stable/installation.html)
-
-        This ensures you'll be able to install the correct packages without interfering with Python on your machine.
-
-        Before you begin, please ensure you have this installed globally. 
+coverage run -m pytest
 
 
-3. Installation
+Cela lance tous les tests tout en mesurant la couverture du code.
 
-    - After cloning, change into the directory and type <code>virtualenv .</code>. This will then set up a a virtual python environment within that directory.
+### Visualiser le rapport de couverture
 
-    - Next, type <code>source bin/activate</code>. You should see that your command prompt has changed to the name of the folder. This means that you can install packages in here without affecting affecting files outside. To deactivate, type <code>deactivate</code>
+Pour obtenir un rapport détaillé de la couverture de code :
 
-    - Rather than hunting around for the packages you need, you can install in one step. Type <code>pip install -r requirements.txt</code>. This will install all the packages listed in the respective file. If you install a package, make sure others know by updating the requirements.txt file. An easy way to do this is <code>pip freeze > requirements.txt</code>
+coverage report -m
 
-    - Flask requires that you set an environmental variable to the python file. However you do that, you'll want to set the file to be <code>server.py</code>. Check [here](https://flask.palletsprojects.com/en/1.1.x/quickstart/#a-minimal-application) for more details
 
-    - You should now be ready to test the application. In the directory, type either <code>flask run</code> or <code>python -m flask run</code>. The app should respond with an address you should be able to go to using your browser.
+L’objectif est d’avoir un taux minimum de 60 % de couverture, mais ici la couverture est à 100 % sur `server.py`.
 
-4. Current Setup
+---
 
-    The app is powered by [JSON files](https://www.tutorialspoint.com/json/json_quick_guide.htm). This is to get around having a DB until we actually need one. The main ones are:
-     
-    * competitions.json - list of competitions
-    * clubs.json - list of clubs with relevant information. You can look here to see what email addresses the app will accept for login.
+## 🚀 Tests de performance avec Locust
 
-5. Testing
+### Description
 
-    You are free to use whatever testing framework you like-the main thing is that you can show what tests you are using.
+Locust simule des utilisateurs réels pour tester la performance sous charge. Ici, 6 utilisateurs effectuent les actions de consultation et réservation.
 
-    We also like to show how well we're testing, so there's a module called 
-    [coverage](https://coverage.readthedocs.io/en/coverage-5.1/) you should add to your project.
+### Lancement des tests Locust
 
+Dans un nouveau terminal, lancez Locust avec :
+
+locust -f locustfile.py --host=http://localhost:5000 --users 6 --spawn-rate 1 --run-time 30s
+
+
+Ensuite, ouvrez un navigateur à l’adresse :  
+`http://localhost:8089`
+
+Cliquez sur start avec 6 utilisateurs pour commencer les tests.
+
+### Résultat attendu
+
+Les temps de réponse doivent être :
+- Inférieurs à 5 secondes pour le chargement des pages
+- Inférieurs à 2 secondes pour les achats de places
+
+Notre rapport `Locust_Test_Report.html` contient les résultats détaillés.
+
+---
+
+## Structure du projet
+
+python_testing/
+├── server.py # Application Flask principale
+├── tests/
+│ ├── test_unit.py # Tests unitaires
+│ ├── test_integration.py # Tests d’intégration
+│ └── conftest.py # Configuration pytest
+├── locustfile.py # Scénarios de tests de performance Locust
+├── Locust_Test_Report.html # Rapport de test de performance généré par Locust
+└── README.md # Ce fichier
